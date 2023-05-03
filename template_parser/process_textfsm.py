@@ -9,4 +9,5 @@ def parse_textfsm(input_text: str, template: str) -> str:
     re_table = textfsm.TextFSM(stream)
     data = re_table.ParseText(input_text)
     result = tabulate(data, tablefmt="plain", headers=re_table.header)
+    print(result)
     return result

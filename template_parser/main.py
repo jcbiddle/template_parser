@@ -33,21 +33,45 @@ def build_page_content(template_language: str):
         raise ValueError(f"Unrecognised language {template_language}")
     data = TEMPLATE_LANGUAGES[template_language]
     language_name = data.get("name", template_language)
-    return html.Div(
-        dbc.Row(
-            [
-                dbc.Col(
-                    html.Div([
-                        dbc.Textarea(
-                            id={"type": "raw-input", "index": template_language},
-                            placeholder=f"Enter raw text",
-                            style={"height": "100%", "resize": "None"},
-                            draggable=False,
-                            persistence=True,
-                            persistence_type="session",
-                        ),
+    return dbc.Row(
+        [
+            dbc.Col(
+                html.Div([
+                    dbc.Textarea(
+                        id={"type": "raw-input", "index": template_language},
+                        placeholder=f"Enter raw text",
+                        style={"height": "100%", "resize": "None"},
+                        draggable=False,
+                        persistence=True,
+                        persistence_type="session",
+                    ),
+                    dcc.Clipboard(
+                        target_id={"type": "raw-input", "index": template_language},
+                        title="copy",
+                        style={
+                            "position": "absolute",
+                            "top": 0,
+                            "right": 20,
+                            "fontSize": 20,
+                        },
+                    ),
+                ],
+                    style={"position": "relative", "height": "100%"}
+                )
+            ),
+
+            dbc.Col(
+                html.Div(
+                    [dbc.Textarea(
+                        id={"type": "input", "index": template_language},
+                        placeholder=f"Enter {language_name} template",
+                        style={"height": "100%", "resize": "None"},
+                        draggable=False,
+                        persistence=True,
+                        persistence_type="session",
+                    ),
                         dcc.Clipboard(
-                            target_id={"type": "raw-input", "index": template_language},
+                            target_id={"type": "input", "index": template_language},
                             title="copy",
                             style={
                                 "position": "absolute",
@@ -57,64 +81,38 @@ def build_page_content(template_language: str):
                             },
                         ),
                     ],
-                        style={"position": "relative", "height": "100%"}
-                    )
-                ),
-
-                dbc.Col(
-                    html.Div(
-                        [dbc.Textarea(
-                            id={"type": "input", "index": template_language},
-                            placeholder=f"Enter {language_name} template",
-                            style={"height": "100%", "resize": "None"},
-                            draggable=False,
-                            persistence=True,
-                            persistence_type="session",
+                    style={"position": "relative", "height": "100%"}
+                )
+            ),
+            dbc.Col(
+                dbc.Card(
+                    html.Div([
+                        dcc.Markdown(
+                            children="Results will appear here",
+                            id={"type": "output", "index": template_language},
+                            style={
+                                "resize": "None",
+                                "white-space": "pre",
+                            },
                         ),
-                            dcc.Clipboard(
-                                target_id={"type": "input", "index": template_language},
-                                title="copy",
-                                style={
-                                    "position": "absolute",
-                                    "top": 0,
-                                    "right": 20,
-                                    "fontSize": 20,
-                                },
-                            ),
-                        ],
-                        style={"position": "relative", "height": "100%"}
-                    )
-                ),
-                dbc.Col(
-                    dbc.Card(
-                        html.Div([
-                            dcc.Markdown(
-                                children="Results will appear here",
-                                id={"type": "output", "index": template_language},
-                                style={
-                                    "resize": "None",
-                                    "white-space": "pre",
-                                },
-                            ),
-                            dcc.Clipboard(
-                                target_id={"type": "input", "index": template_language},
-                                title="copy",
-                                style={
-                                    "position": "absolute",
-                                    "top": 0,
-                                    "right": 20,
-                                    "fontSize": 20,
-                                },
-                            ),
-                        ],
-                            style={"position": "relative", "height": "100%", "class": "form-control"}
+                        dcc.Clipboard(
+                            target_id={"type": "input", "index": template_language},
+                            title="copy",
+                            style={
+                                "position": "absolute",
+                                "top": 0,
+                                "right": 20,
+                                "fontSize": 20,
+                            },
                         ),
-                        style={"height": "100%", "padding": "10px"}
-                    )
-                ),
-            ],
-            style={"height": "90vh"},
-        ),
+                    ],
+                        style={"position": "relative", "height": "100%", "class": "form-control"}
+                    ),
+                    style={"height": "100%", "padding": "10px"}
+                )
+            ),
+        ],
+        style={"height": "85vh"},
     )
 
 
@@ -182,6 +180,11 @@ def process_textfsm(template_text, raw_text, existing_result):
         raise PreventUpdate
     try:
         result = parse_textfsm(raw_text, template_text)
+        result = dedent(f"""\
+```
+{result}
+```
+""")
         return result, False
     except TextFSMTemplateError:
         return existing_result, True
@@ -189,11 +192,12 @@ def process_textfsm(template_text, raw_text, existing_result):
 
 @app.callback(Output({"type": "input", "index": ALL}, "value", allow_duplicate=True),
               Output({"type": "raw-input", "index": ALL}, "value", allow_duplicate=True),
+              Output({"type": "output", "index": ALL}, "children", allow_duplicate=True),
               Input("btn-clear-text", 'n_clicks'),
               prevent_initial_call=True
               )
 def clear_templates(_):
-    return [""], [""]
+    return [""], [""], ["Results will appear here"]
 
 
 def serve_layout():
