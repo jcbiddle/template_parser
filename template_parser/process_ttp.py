@@ -1,3 +1,4 @@
+import re
 from typing import Optional
 from xml.etree.ElementTree import ParseError
 
@@ -14,5 +15,5 @@ def parse_ttp(input_text: str, template: str) -> Optional[str]:
         return results
     except IndexError:
         return ""
-    except ParseError as e:
+    except (ParseError, re.error) as e:
         raise RuntimeError(e)

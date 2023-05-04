@@ -36,7 +36,7 @@ def add_clipboard(target_id):
             "top": 30,
             "right": 10,
             "fontSize": 20,
-        }
+        },
     )
 
 
@@ -48,13 +48,13 @@ def add_editor(textarea_id: dict, placeholder_text: str):
         persistence=True,
         persistence_type="session",
         spellcheck=False,
-        className="mb-3"
+        className="mb-3",
     )
 
 
 def build_page_content(template_language: str):
     if template_language not in TEMPLATE_LANGUAGES:
-        raise ValueError(f"Unrecognised language {template_language}")
+        return html.Div("404")
     data = TEMPLATE_LANGUAGES[template_language]
     language_name = data.get("name", template_language)
 
@@ -63,19 +63,27 @@ def build_page_content(template_language: str):
             dbc.Col(
                 html.Div(
                     [
-                        add_editor({"type": "raw-input", "index": template_language}, "Enter raw text"),
-                        add_clipboard({"type": "raw-input", "index": template_language})
+                        add_editor(
+                            {"type": "raw-input", "index": template_language},
+                            "Enter raw text",
+                        ),
+                        add_clipboard(
+                            {"type": "raw-input", "index": template_language}
+                        ),
                     ],
-                    style={"position": "relative", "height": "100%"}
+                    style={"position": "relative", "height": "100%"},
                 )
             ),
             dbc.Col(
                 html.Div(
                     [
-                        add_editor({"type": "input", "index": template_language}, f"Enter {language_name} template"),
-                        add_clipboard({"type": "input", "index": template_language})
+                        add_editor(
+                            {"type": "input", "index": template_language},
+                            f"Enter {language_name} template",
+                        ),
+                        add_clipboard({"type": "input", "index": template_language}),
                     ],
-                    style={"position": "relative", "height": "100%"}
+                    style={"position": "relative", "height": "100%"},
                 )
             ),
             dbc.Col(
@@ -90,14 +98,17 @@ def build_page_content(template_language: str):
                                     "white-space": "pre",
                                 },
                             ),
-                            style={"padding": "10px", "overflow": "auto"}
+                            style={
+                                "padding": "10px",
+                                "overflow": "auto",
+                            },
                         ),
-                        add_clipboard({"type": "output", "index": template_language})
+                        add_clipboard({"type": "output", "index": template_language}),
                     ],
-                    style={"position": "relative", "height": "100%"}
+                    style={"position": "relative", "height": "100%"},
                 ),
-                style={"max-height": "100%"}
-            )
+                style={"max-height": "100%"},
+            ),
         ],
         style={"height": "90vh"},
     )
@@ -165,22 +176,25 @@ def process_textfsm(template_text, raw_text, existing_result):
         raise PreventUpdate
     try:
         result = parse_textfsm(raw_text, template_text)
-        result = dedent(f"""\
+        result = dedent(
+            f"""\
 ```
 {result}
 ```
-""")
+"""
+        )
         return result, False
     except RuntimeError:
         return existing_result, True
 
 
-@app.callback(Output({"type": "input", "index": ALL}, "value", allow_duplicate=True),
-              Output({"type": "raw-input", "index": ALL}, "value", allow_duplicate=True),
-              Output({"type": "output", "index": ALL}, "children", allow_duplicate=True),
-              Input("btn-clear-text", 'n_clicks'),
-              prevent_initial_call=True
-              )
+@app.callback(
+    Output({"type": "input", "index": ALL}, "value", allow_duplicate=True),
+    Output({"type": "raw-input", "index": ALL}, "value", allow_duplicate=True),
+    Output({"type": "output", "index": ALL}, "children", allow_duplicate=True),
+    Input("btn-clear-text", "n_clicks"),
+    prevent_initial_call=True,
+)
 def clear_templates(_):
     return [""], [""], ["Results will appear here"]
 
@@ -189,11 +203,16 @@ def serve_layout():
     return dbc.Container(
         [
             dbc.Row(dbc.Col(html.Div(style={"height": "20px"}))),
-            dbc.Row([dbc.Col(tabs, width=3), dbc.Col(dbc.Button("Clear", id="btn-clear-text"), width='auto')],
-                    justify="between"),
+            dbc.Row(
+                [
+                    dbc.Col(tabs, width=3),
+                    dbc.Col(dbc.Button("Clear", id="btn-clear-text"), width="auto"),
+                ],
+                justify="between",
+            ),
             dbc.Row(dbc.Col(html.Div(id="content"))),
         ],
-        fluid=True
+        fluid=True,
     )
 
 
