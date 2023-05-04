@@ -97,17 +97,6 @@ files = [
 ]
 
 [[package]]
-name = "dash-editor-components"
-version = "0.0.2"
-description = "Code Editor components for Dash"
-category = "main"
-optional = false
-python-versions = "*"
-files = [
-    {file = "dash_editor_components-0.0.2.tar.gz", hash = "sha256:06ddf8efcf9da36dd237cad7caef40cc3296a300412849d3f2c373200cef6d65"},
-]
-
-[[package]]
 name = "dash-html-components"
 version = "2.0.0"
 description = "Vanilla HTML components for Dash"
@@ -378,4 +367,4 @@ watchdog = ["watchdog (>=2.3)"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "5cc044ba40aa435777f6ca22aab37b3ce80636c2f8183ee5b0687ce4300f966f"
+content-hash = "782422ade181f3b679b70eb090fb92a8ddb0e2dc7ea3c45a35d7133e1e5e9a79"
