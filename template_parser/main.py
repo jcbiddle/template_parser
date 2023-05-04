@@ -1,11 +1,9 @@
 import logging.config
 from textwrap import dedent
-from xml.etree.ElementTree import ParseError
 
 import dash_bootstrap_components as dbc
 from dash import html, Dash, Input, Output, dcc, State, ALL
 from dash.exceptions import PreventUpdate
-from textfsm.parser import TextFSMTemplateError
 
 from template_parser.process_textfsm import parse_textfsm
 from template_parser.process_ttp import parse_ttp
@@ -21,6 +19,7 @@ app = Dash(
     external_stylesheets=[dbc.themes.BOOTSTRAP],
     suppress_callback_exceptions=True,
 )
+app.title = "Template Parser"
 
 TEMPLATE_LANGUAGES = {
     "ttp": {"name": "TTP"},
@@ -28,109 +27,95 @@ TEMPLATE_LANGUAGES = {
 }
 
 
+def add_clipboard(target_id):
+    return dcc.Clipboard(
+        target_id=target_id,
+        title="copy",
+        style={
+            "position": "absolute",
+            "top": 30,
+            "right": 10,
+            "fontSize": 20,
+        }
+    )
+
+
+def add_editor(textarea_id: dict, placeholder_text: str):
+    return dbc.Textarea(
+        id=textarea_id,
+        placeholder=placeholder_text,
+        style={"height": "100%", "resize": "None"},
+        persistence=True,
+        persistence_type="session",
+        spellcheck=False,
+        className="mb-3"
+    )
+
+
 def build_page_content(template_language: str):
     if template_language not in TEMPLATE_LANGUAGES:
         raise ValueError(f"Unrecognised language {template_language}")
     data = TEMPLATE_LANGUAGES[template_language]
     language_name = data.get("name", template_language)
+
     return dbc.Row(
         [
             dbc.Col(
-                html.Div([
-                    dbc.Textarea(
-                        id={"type": "raw-input", "index": template_language},
-                        placeholder=f"Enter raw text",
-                        style={"height": "100%", "resize": "None"},
-                        draggable=False,
-                        persistence=True,
-                        persistence_type="session",
-                    ),
-                    dcc.Clipboard(
-                        target_id={"type": "raw-input", "index": template_language},
-                        title="copy",
-                        style={
-                            "position": "absolute",
-                            "top": 0,
-                            "right": 20,
-                            "fontSize": 20,
-                        },
-                    ),
-                ],
+                html.Div(
+                    [
+                        add_editor({"type": "raw-input", "index": template_language}, "Enter raw text"),
+                        add_clipboard({"type": "raw-input", "index": template_language})
+                    ],
                     style={"position": "relative", "height": "100%"}
                 )
             ),
-
             dbc.Col(
                 html.Div(
-                    [dbc.Textarea(
-                        id={"type": "input", "index": template_language},
-                        placeholder=f"Enter {language_name} template",
-                        style={"height": "100%", "resize": "None"},
-                        draggable=False,
-                        persistence=True,
-                        persistence_type="session",
-                    ),
-                        dcc.Clipboard(
-                            target_id={"type": "input", "index": template_language},
-                            title="copy",
-                            style={
-                                "position": "absolute",
-                                "top": 0,
-                                "right": 20,
-                                "fontSize": 20,
-                            },
-                        ),
+                    [
+                        add_editor({"type": "input", "index": template_language}, f"Enter {language_name} template"),
+                        add_clipboard({"type": "input", "index": template_language})
                     ],
                     style={"position": "relative", "height": "100%"}
                 )
             ),
             dbc.Col(
                 dbc.Card(
-                    html.Div([
-                        dcc.Markdown(
-                            children="Results will appear here",
-                            id={"type": "output", "index": template_language},
-                            style={
-                                "resize": "None",
-                                "white-space": "pre",
-                            },
+                    [
+                        html.Div(
+                            dcc.Markdown(
+                                children="Results will appear here",
+                                id={"type": "output", "index": template_language},
+                                style={
+                                    "resize": "None",
+                                    "white-space": "pre",
+                                },
+                            ),
+                            style={"padding": "10px", "overflow": "auto"}
                         ),
-                        dcc.Clipboard(
-                            target_id={"type": "input", "index": template_language},
-                            title="copy",
-                            style={
-                                "position": "absolute",
-                                "top": 0,
-                                "right": 20,
-                                "fontSize": 20,
-                            },
-                        ),
+                        add_clipboard({"type": "output", "index": template_language})
                     ],
-                        style={"position": "relative", "height": "100%", "class": "form-control"}
-                    ),
-                    style={"height": "100%", "padding": "10px"}
-                )
-            ),
+                    style={"position": "relative", "height": "100%"}
+                ),
+                style={"max-height": "100%"}
+            )
         ],
-        style={"height": "85vh"},
+        style={"height": "90vh"},
     )
 
 
 tabs = html.Div(
-    [
-        dbc.Tabs(
-            [
-                dbc.Tab(
-                    label=TEMPLATE_LANGUAGES[language].get("name", language),
-                    tab_id=f"tab-{language}",
-                )
-                for language in TEMPLATE_LANGUAGES
-            ],
-            id="tabs",
-            persistence=True,
-            persistence_type="session",
-        ),
-    ]
+    dbc.Tabs(
+        [
+            dbc.Tab(
+                label=TEMPLATE_LANGUAGES[language].get("name", language),
+                tab_id=f"tab-{language}",
+            )
+            for language in TEMPLATE_LANGUAGES
+        ],
+        id="tabs",
+        persistence=True,
+        persistence_type="session",
+    ),
 )
 
 
@@ -152,7 +137,7 @@ def process_ttp(template_text, raw_text, existing_result):
         raise PreventUpdate
     try:
         result = parse_ttp(raw_text, template_text)
-    except ParseError:
+    except RuntimeError:
         return existing_result, True
 
     if not result:
@@ -186,7 +171,7 @@ def process_textfsm(template_text, raw_text, existing_result):
 ```
 """)
         return result, False
-    except TextFSMTemplateError:
+    except RuntimeError:
         return existing_result, True
 
 
