@@ -1,11 +1,10 @@
 import re
-from typing import Optional
 from xml.etree.ElementTree import ParseError
 
 from ttp import ttp
 
 
-def parse_ttp(input_text: str, template: str) -> Optional[str]:
+def parse_ttp(input_text: str, template: str) -> str:
     """Parse text using a TTP template, returning the result in JSON format"""
     # print result in JSON format
     try:
