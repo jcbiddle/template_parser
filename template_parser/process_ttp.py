@@ -1,6 +1,3 @@
-import re
-from xml.etree.ElementTree import ParseError
-
 from ttp import ttp
 
 
@@ -14,5 +11,3 @@ def parse_ttp(input_text: str, template: str) -> str:
         return results
     except IndexError:
         return ""
-    except (ParseError, re.error) as e:
-        raise RuntimeError(e)

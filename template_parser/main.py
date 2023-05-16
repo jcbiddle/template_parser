@@ -148,7 +148,7 @@ def process_ttp(template_text, raw_text, existing_result):
         raise PreventUpdate
     try:
         result = parse_ttp(raw_text, template_text)
-    except RuntimeError:
+    except (Exception, SystemExit):
         return existing_result, True
 
     if not result:
