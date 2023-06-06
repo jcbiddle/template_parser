@@ -8,12 +8,7 @@ from dash.exceptions import PreventUpdate
 from template_parser.process_textfsm import parse_textfsm
 from template_parser.process_ttp import parse_ttp
 
-logging.config.dictConfig(
-    {
-        "version": 1,
-        "disable_existing_loggers": True,
-    }
-)
+logging.disable()
 app = Dash(
     __name__,
     external_stylesheets=[dbc.themes.BOOTSTRAP],
